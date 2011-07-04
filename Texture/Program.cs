@@ -15,7 +15,14 @@ namespace Texture
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new Form1());
+
+			MainForm form = new MainForm();
+			form.Show();
+			while (form.Created)
+			{
+				form.Render();
+				Application.DoEvents();
+			}
 		}
 	}
 }
