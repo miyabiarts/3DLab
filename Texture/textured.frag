@@ -1,4 +1,3 @@
-
 uniform sampler2D tex;
 varying vec2 uv;
 varying vec4 diffuseColor;
