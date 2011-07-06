@@ -33,9 +33,7 @@ namespace Texture
 
 			// Texture
 			GL.GenTextures(1, out tex);
-			GL.ActiveTexture(TextureUnit.Texture0);
 			GL.BindTexture(TextureTarget.Texture2D, tex);
-			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, 1024, 1024, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
@@ -45,6 +43,14 @@ namespace Texture
 				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
 				bitmap.UnlockBits(data);
 			}
+		}
+
+
+		private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			plane.Dispose();
+
+			GL.DeleteProgram(program);
 		}
 
 		public void Render()
@@ -73,6 +79,10 @@ namespace Texture
 
 			GL.UniformMatrix4(GL.GetUniformLocation(program, "viewProjection"), false, ref viewProjectionMatrix);
 			GL.UniformMatrix4(GL.GetUniformLocation(program, "world"), false, ref worldMatrix);
+
+			GL.ActiveTexture(TextureUnit.Texture0);
+			GL.BindTexture(TextureTarget.Texture2D, tex);
+			GL.Uniform1(GL.GetUniformLocation(program, "tex"), 0);
 
 			plane.Render();
 
@@ -116,5 +126,6 @@ namespace Texture
 
 			return program;
 		}
+
 	}
 }
