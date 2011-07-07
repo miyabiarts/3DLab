@@ -7,10 +7,12 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 
-namespace Texture
+
+namespace FBO
 {
-	class Plane
+	class Cube
 	{
+		// キューブを構成する頂点要素（シェーダの頂点要素と合わせる）
 		struct Vertex
 		{
 			public Vector3 position;
@@ -26,35 +28,52 @@ namespace Texture
 
 		int vbo;
 		int vao;
-		int ebo;
 		int vertexCount;
 
-		public Plane(int program)
+		public Cube(int program)
 		{
 			GL.GenBuffers(1, out vbo);
-			Vertex[] v = new Vertex[]{
-				new Vertex(new Vector3(-1.0f, 1.0f, 0.0f), new Vector2( 0.0f, 0.0f)),
-				new Vertex(new Vector3( 1.0f, 1.0f, 0.0f), new Vector2( 1.0f, 0.0f)),
-				new Vertex(new Vector3( 1.0f,-1.0f, 0.0f), new Vector2( 1.0f, 1.0f)),
-				new Vertex(new Vector3(-1.0f,-1.0f, 0.0f), new Vector2( 0.0f, 1.0f)),
+
+			Vector3[] pos = new Vector3[]{
+				new Vector3(-1.0f, 1.0f,-1.0f),
+				new Vector3( 1.0f, 1.0f,-1.0f),
+				new Vector3( 1.0f, 1.0f, 1.0f), 
+				new Vector3(-1.0f, 1.0f, 1.0f),
+				new Vector3(-1.0f,-1.0f,-1.0f),
+				new Vector3( 1.0f,-1.0f,-1.0f),
+				new Vector3( 1.0f,-1.0f, 1.0f),
+				new Vector3(-1.0f,-1.0f, 1.0f),
 			};
 
+			Vector2[] texcoord = new Vector2[]{
+				new Vector2(0.0f,0.0f),
+				new Vector2(1.0f,0.0f),
+				new Vector2(1.0f,1.0f),
+				new Vector2(0.0f,1.0f),
+			};
 
 
 			uint[] indices = new uint[]{
-             0,1,2,
-						 0,2,3,
+             0,1,2,3,
+						 1,0,4,5,
+						 2,1,5,6,
+						 3,2,6,7,
+						 0,3,7,4,
+						 7,6,5,4
 			};
+
+
+			List<Vertex> v = new List<Vertex>();
+			for (int i = 0; i < indices.Count(); ++i)
+			{
+				v.Add(new Vertex(pos[indices[i]], texcoord[i%4]));
+			}
+			
 
 			// VBO作成
 			GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-			GL.BufferData<Vertex>(BufferTarget.ArrayBuffer, new IntPtr(v.Length * Vertex.Stride), v, BufferUsageHint.StaticDraw);
-
-			// EBO作成
-			GL.GenBuffers(1, out ebo);
-			GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-			GL.BufferData<uint>(BufferTarget.ElementArrayBuffer, new IntPtr(sizeof(uint) * indices.Length), indices, BufferUsageHint.StaticDraw);
-			vertexCount = indices.Length;
+			GL.BufferData<Vertex>(BufferTarget.ArrayBuffer, new IntPtr(v.Count() * Vertex.Stride), v.ToArray(), BufferUsageHint.StaticDraw);
+			vertexCount = v.Count();
 
 			// VAO作成
 			GL.GenVertexArrays(1, out vao);
@@ -75,7 +94,6 @@ namespace Texture
 		public void Dispose()
 		{
 			GL.DeleteBuffers(1, ref vbo);
-			GL.DeleteBuffers(1, ref ebo);
 			GL.DeleteVertexArrays(1, ref vao);
 		}
 
@@ -83,8 +101,9 @@ namespace Texture
 		public void Render()
 		{
 			GL.BindVertexArray(vao);
-			GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-			GL.DrawElements(BeginMode.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
+			GL.DrawArrays(BeginMode.Quads, 0, vertexCount);
 		}
+
 	}
+
 }
