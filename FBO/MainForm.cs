@@ -20,6 +20,7 @@ namespace FBO
 		Cube cube;
 		int tex;
 
+	  const int TexSize = 1024;
 		int colorTex;
 		int depthTex;
 		int fbo;
@@ -49,22 +50,22 @@ namespace FBO
 				bitmap.UnlockBits(data);
 			}
 
-			// Create Color Tex
+			// Color Tex
 			GL.GenTextures(1, out colorTex);
 			GL.BindTexture(TextureTarget.Texture2D, colorTex);
-			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, 1024, 1024, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, TexSize, TexSize, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
-			// Create Depth Tex
+			// Depth Tex
 			GL.GenTextures(1, out depthTex);
 			GL.BindTexture(TextureTarget.Texture2D, depthTex);
-			GL.TexImage2D(TextureTarget.Texture2D, 0, (PixelInternalFormat)All.DepthComponent32, 1024, 1024, 0, OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent, PixelType.UnsignedInt, IntPtr.Zero);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, (PixelInternalFormat)All.DepthComponent32, TexSize, TexSize, 0, OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent, PixelType.UnsignedInt, IntPtr.Zero);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
 
-			// Create a FBO and attach the textures
+			// FBO
 			GL.Ext.GenFramebuffers(1, out fbo);
 			GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
 			GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, colorTex, 0);
@@ -95,16 +96,17 @@ namespace FBO
 			GL.FrontFace(FrontFaceDirection.Cw);
 			GL.CullFace(CullFaceMode.Back);
 
+			// 1 pass
 			GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
 
-			GL.Viewport(0, 0, 1024, 1024);
+			GL.Viewport(0, 0, TexSize, TexSize);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			Vector3 eyePos = new Vector3(3.0f, 3.0f, 3.0f);
 			Vector3 lookAt = new Vector3(0.0f, 0.0f, 0.0f);
 			Vector3 eyeUp = new Vector3(0.0f, 1.0f, 0.0f);
 			Matrix4 viewMatrix = Matrix4.LookAt(eyePos, lookAt, eyeUp);
-			Matrix4 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView((float)System.Math.PI / 4.0f, (float)1024 / (float)1024, 0.1f, 15.0f);
+			Matrix4 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView((float)System.Math.PI / 4.0f, (float)TexSize / (float)TexSize, 0.1f, 15.0f);
 			Matrix4 viewProjectionMatrix = viewMatrix * projectionMatrix;
 
 			Matrix4 worldMatrix = Matrix4.Identity;
@@ -120,9 +122,8 @@ namespace FBO
 			
 			cube.Render();
 
-			//
+			// 2 pass
 			GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
-
 
 			GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
